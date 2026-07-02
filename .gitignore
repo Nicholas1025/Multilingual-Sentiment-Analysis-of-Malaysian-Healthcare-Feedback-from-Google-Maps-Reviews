@@ -19,11 +19,7 @@ models/*.npz
 models/transformer/
 models/*.txt
 
-# ─── Generated artefacts ────────────────────────────────────────────
-*.png
-*.svg
-Report/*.docx
-Report/figures/
+
 
 # ─── Browser / scraping leftovers ───────────────────────────────────
 chrome_profile/
