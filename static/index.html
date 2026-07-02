@@ -1,0 +1,203 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Academic healthcare feedback sentiment analysis dashboard for Malaysian multilingual reviews.">
+  <title>Analyse | Healthcare Feedback Intelligence</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260702-timeline-fix">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to analysis</a>
+
+<header>
+  <div class="brand">Healthcare Feedback SA <small>Research intelligence platform</small></div>
+  <nav aria-label="Primary navigation">
+    <a href="/" class="active">Analyse</a>
+    <a href="/batch">Batch</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/ranking">Ranking</a>
+    <a href="/chat">Chat</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="hero-copy reveal">
+      <p class="page-kicker">Multilingual inference console</p>
+      <h1>Decode healthcare feedback into service signals.</h1>
+      <p class="lede">Analyse Malaysian healthcare reviews, then inspect confidence, aspect classification, language detection, and lexical evidence in a presentation-ready workspace.</p>
+      <div class="hero-stats">
+        <span class="stat-chip"><strong>EN / BM / ZH</strong> language coverage</span>
+        <span class="stat-chip"><strong>7</strong> healthcare aspects</span>
+        <span class="stat-chip"><strong>RAG</strong> evidence layer</span>
+      </div>
+    </div>
+
+    <aside class="bezel dark reveal delay-1" aria-label="Signal preview">
+      <div class="panel dark-panel">
+        <h2>Signal profile</h2>
+        <p class="hint">The interface is shaped for model inspection rather than simple form submission.</p>
+        <div class="glass-lines">
+          <div class="signal-row"><span>sentiment</span><div class="signal-track"><div class="signal-fill" style="width:76%"></div></div><span>0.76</span></div>
+          <div class="signal-row"><span>aspects</span><div class="signal-track"><div class="signal-fill copper" style="width:62%"></div></div><span>0.62</span></div>
+          <div class="signal-row"><span>evidence</span><div class="signal-track"><div class="signal-fill plum" style="width:88%"></div></div><span>0.88</span></div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="module-grid">
+    <div class="bezel reveal delay-2">
+      <div class="panel">
+        <h2>Review input</h2>
+        <p class="hint">Paste a review in English, Bahasa Malaysia, Chinese, or mixed language. The backend model and API contract are unchanged.</p>
+        <textarea id="reviewInput" placeholder="Example: The doctor was friendly but we waited 3 hours for a 10 minute consultation. Hospital is clean though..."></textarea>
+        <div class="action-row">
+          <button class="primary" id="predictBtn">Analyse sentiment</button>
+          <span id="hint" class="status-text" aria-live="polite"></span>
+        </div>
+      </div>
+    </div>
+
+    <aside class="bezel reveal delay-3">
+      <div class="panel">
+        <h2>Reading guide</h2>
+        <div class="mini-stack">
+          <div class="mini-card"><strong>Confidence</strong><span>Model certainty shown as calibrated class scores.</span></div>
+          <div class="mini-card"><strong>Aspect view</strong><span>Doctor, staff, waiting time, facilities, cost, treatment, cleanliness.</span></div>
+          <div class="mini-card"><strong>Evidence</strong><span>Influential words are surfaced when available from the model.</span></div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section id="result" class="result-block" style="display:none;" aria-live="polite"></section>
+</main>
+
+<footer>TNL6323 Natural Language Processing Project | Healthcare Feedback Sentiment Analysis</footer>
+
+<script src="/static/app.js"></script>
+<script>
+const btn = document.getElementById("predictBtn");
+const input = document.getElementById("reviewInput");
+const out = document.getElementById("result");
+
+btn.addEventListener("click", async () => {
+  const text = input.value.trim();
+  if (!text) {
+    input.focus();
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Analysing';
+
+  try {
+    const r = await fetch("/api/predict", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({text}),
+    });
+    if (!r.ok) throw new Error("API error: " + r.status);
+    const data = await r.json();
+    renderResult(data);
+  } catch (e) {
+    out.style.display = "block";
+    out.innerHTML = `<div class="bezel"><div class="panel"><div class="alert">${escapeHtml(e.message)}</div></div></div>`;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Analyse sentiment";
+  }
+});
+
+function renderResult(d) {
+  const labelClass = "label-" + d.label;
+  let html = `<div class="bezel reveal"><div class="panel">
+    <div class="result-head">
+      <div>
+        <p class="section-label">Model output</p>
+        <h2>Prediction result</h2>
+        <span class="label-pill ${labelClass}">${d.label}</span>
+      </div>
+      <div class="confidence">Confidence ${(d.confidence * 100).toFixed(1)}%</div>
+    </div>`;
+
+  if (d.class_scores && Object.keys(d.class_scores).length) {
+    html += `<div class="score-grid">`;
+    for (const lab of ["positive", "neutral", "negative"]) {
+      const v = d.class_scores[lab] || 0;
+      html += `<div class="score">
+        <div>
+          <div class="name">${lab}</div>
+          <div class="val">${(v * 100).toFixed(1)}%</div>
+        </div>
+        <div class="bar"><div class="bar-fill ${lab}" style="width:${v * 100}%"></div></div>
+      </div>`;
+    }
+    html += `</div>`;
+  }
+
+  html += `<div class="meta-row">
+    <span class="chip strong"><strong>${escapeHtml(d.language)}</strong> language</span>
+    <span class="chip">Model: ${escapeHtml(d.model_used)}</span>`;
+  if (d.emojis && d.emojis.length)
+    html += `<span class="chip">Emojis: ${d.emojis.map(escapeHtml).join(" ")}</span>`;
+  html += `</div>`;
+
+  if (d.aspects && Object.keys(d.aspects).length) {
+    html += `<h3>Aspect-based breakdown</h3>
+    <div class="table-wrap">
+      <table class="aspects">
+        <thead><tr><th>Aspect</th><th>Sentiment</th></tr></thead><tbody>`;
+    for (const [a, s] of Object.entries(d.aspects)) {
+      html += `<tr><td>${aspectName(a)}</td>
+        <td><span class="label-pill label-${s}">${s}</span></td></tr>`;
+    }
+    html += `</tbody></table></div>`;
+  }
+
+  if (d.top_words && d.top_words.length) {
+    html += `<h3>Top influencing words</h3>`;
+    const maxW = Math.max(...d.top_words.map(w => Math.abs(w.weight)));
+    for (const w of d.top_words) {
+      const pct = maxW > 0 ? Math.round(100 * Math.abs(w.weight) / maxW) : 0;
+      const tone = w.weight >= 0 ? "positive" : "negative";
+      html += `<div class="word-row">
+        <span class="word-token">${escapeHtml(w.word)}</span>
+        <div class="word-bar"><div class="word-bar-fill ${tone}" style="width:${pct}%"></div></div>
+        <span class="word-weight">${w.weight.toFixed(3)}</span>
+      </div>`;
+    }
+  }
+
+  html += `<details>
+    <summary>Show preprocessed text</summary>
+    <pre>${escapeHtml(d.text_cleaned)}</pre>
+  </details>`;
+
+  html += `</div></div>`;
+  out.style.display = "block";
+  out.innerHTML = html;
+}
+
+function aspectName(k) {
+  return ({
+    "doctor": "Doctor",
+    "nurse_staff": "Nurse / Staff",
+    "waiting_time": "Waiting Time",
+    "facilities": "Facilities",
+    "cost": "Cost",
+    "treatment": "Treatment",
+    "cleanliness": "Cleanliness",
+  })[k] || k;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"]/g, c =>
+    ({"&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;"}[c]));
+}
+</script>
+</body>
+</html>

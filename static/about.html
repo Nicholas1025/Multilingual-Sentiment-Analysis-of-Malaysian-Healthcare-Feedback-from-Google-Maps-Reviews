@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Project overview for a multilingual healthcare feedback sentiment analysis NLP system.">
+  <title>About | Healthcare Feedback Intelligence</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260702-timeline-fix">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to overview</a>
+
+<header>
+  <div class="brand">Healthcare Feedback SA <small>Research intelligence platform</small></div>
+  <nav aria-label="Primary navigation">
+    <a href="/">Analyse</a>
+    <a href="/batch">Batch</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/ranking">Ranking</a>
+    <a href="/chat">Chat</a>
+    <a href="/about" class="active">About</a>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="hero-copy reveal">
+      <p class="page-kicker">Research system overview</p>
+      <h1>A multilingual NLP pipeline for Malaysian healthcare feedback.</h1>
+      <p class="lede">Built for the TNL6323 Natural Language Processing course project, the app brings preprocessing, sentiment modelling, aspect analysis, ranking, and retrieval-based Q&A into one polished demo surface.</p>
+    </div>
+    <aside class="bezel dark reveal delay-1">
+      <div class="panel dark-panel">
+        <h2>Project scope</h2>
+        <div class="glass-lines">
+          <div class="signal-row"><span>languages</span><div class="signal-track"><div class="signal-fill" style="width:82%"></div></div><span>4</span></div>
+          <div class="signal-row"><span>aspects</span><div class="signal-track"><div class="signal-fill copper" style="width:72%"></div></div><span>7</span></div>
+          <div class="signal-row"><span>surfaces</span><div class="signal-track"><div class="signal-fill plum" style="width:90%"></div></div><span>6</span></div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="grid">
+    <div class="bezel reveal delay-2">
+      <div class="panel">
+        <h2>Supported language</h2>
+        <div class="meta-row">
+          <span class="chip strong"><strong>EN</strong> English</span>
+          <span class="chip strong"><strong>BM</strong> Bahasa Malaysia</span>
+          <span class="chip strong"><strong>ZH</strong> Chinese</span>
+          <span class="chip strong"><strong>Mix</strong> Manglish / Rojak</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bezel reveal delay-3">
+      <div class="panel">
+        <h2>Core outputs</h2>
+        <div class="meta-row">
+          <span class="chip">Sentiment label</span>
+          <span class="chip">Confidence score</span>
+          <span class="chip">Aspect sentiment</span>
+          <span class="chip">Hospital ranking</span>
+          <span class="chip">Grounded Q&A</span>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bezel reveal">
+    <div class="panel">
+      <h2>Pipeline</h2>
+      <ol class="timeline">
+        <li><strong>Data collection.</strong> Google Maps reviews were collected for Malaysian healthcare providers, including recovery of original review text where available.</li>
+        <li><strong>Preprocessing.</strong> The multilingual cleaning pipeline uses NLTK for English, Sastrawi for Malay, jieba for Chinese, and emoji-to-sentiment token conversion.</li>
+        <li><strong>Feature representation.</strong> Reviews are split into train, validation, and test sets with TF-IDF unigram and bigram features for baseline models.</li>
+        <li><strong>Model training.</strong> Logistic Regression, SVM, and Naive Bayes baselines are included, with a fine-tuned XLM-RoBERTa multilingual transformer for stronger inference.</li>
+        <li><strong>Aspect analysis.</strong> The app identifies healthcare aspects such as doctor, waiting time, facilities, cost, treatment, and cleanliness.</li>
+        <li><strong>Deployment.</strong> FastAPI serves the backend APIs while vanilla HTML, CSS, and JavaScript power the interface.</li>
+      </ol>
+    </div>
+  </section>
+
+  <section class="bezel reveal">
+    <div class="panel">
+      <h2>References</h2>
+      <p class="hint">Literature review references are documented in <code>References/references.md</code> inside the project source.</p>
+    </div>
+  </section>
+</main>
+
+<footer>TNL6323 Natural Language Processing Project | Healthcare Feedback Sentiment Analysis</footer>
+</body>
+</html>

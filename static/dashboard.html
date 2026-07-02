@@ -1,0 +1,134 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Dataset dashboard for Malaysian healthcare review sentiment, language, and aspect coverage.">
+  <title>Dashboard | Healthcare Feedback Intelligence</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260702-timeline-fix">
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to dashboard</a>
+
+<header>
+  <div class="brand">Healthcare Feedback SA <small>Research intelligence platform</small></div>
+  <nav aria-label="Primary navigation">
+    <a href="/">Analyse</a>
+    <a href="/batch">Batch</a>
+    <a href="/dashboard" class="active">Dashboard</a>
+    <a href="/ranking">Ranking</a>
+    <a href="/chat">Chat</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="hero-copy reveal">
+      <p class="page-kicker">Corpus intelligence</p>
+      <h1>Read the dataset before trusting the model story.</h1>
+      <p class="lede">A compact research dashboard for label balance, language mix, and aspect coverage in the review corpus currently available on disk.</p>
+    </div>
+    <aside class="bezel dark reveal delay-1">
+      <div class="panel dark-panel">
+        <h2>Dataset summary</h2>
+        <div id="summary" class="summary-band" aria-live="polite"></div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="grid">
+    <div class="bezel reveal delay-2">
+      <div class="panel">
+        <h2>Sentiment distribution</h2>
+        <div class="chart-box"><canvas id="chartLabels"></canvas></div>
+      </div>
+    </div>
+    <div class="bezel reveal delay-3">
+      <div class="panel">
+        <h2>Language distribution</h2>
+        <div class="chart-box"><canvas id="chartLangs"></canvas></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="bezel reveal">
+    <div class="panel">
+      <h2>Aspect frequency</h2>
+      <p class="hint">How often each healthcare aspect is mentioned across reviews.</p>
+      <div class="chart-box tall"><canvas id="chartAspects"></canvas></div>
+    </div>
+  </section>
+</main>
+
+<footer>TNL6323 Natural Language Processing Project | Healthcare Feedback Sentiment Analysis</footer>
+
+<script>
+const PALETTE = {
+  positive: "#257a52", neutral: "#9b6a17", negative: "#b04444",
+  english: "#0f6d68", malay: "#16918a", chinese: "#b04444",
+  mixed: "#a66d2d", other: "#66736e",
+};
+const fallback = "#16918a";
+
+Chart.defaults.font.family = "Outfit, system-ui, sans-serif";
+Chart.defaults.color = "#66736e";
+
+async function load() {
+  const r = await fetch("/api/stats");
+  if (!r.ok) {
+    document.getElementById("summary").innerHTML = '<span class="chip">No dataset on disk yet.</span>';
+    return;
+  }
+  const d = await r.json();
+
+  document.getElementById("summary").innerHTML = `
+    <span class="chip strong"><strong>${d.total_reviews}</strong> reviews</span>
+    <span class="chip"><strong>${d.avg_text_length}</strong> avg chars</span>
+    <span class="chip"><strong>${Object.keys(d.source_distribution || {}).length}</strong> sources</span>
+  `;
+
+  pie("chartLabels", d.label_distribution);
+  pie("chartLangs", d.language_distribution);
+  bar("chartAspects", d.top_aspects);
+}
+
+function pie(id, dist) {
+  const labels = Object.keys(dist);
+  const data = Object.values(dist);
+  const colors = labels.map(l => PALETTE[l] || fallback);
+  new Chart(document.getElementById(id), {
+    type: "doughnut",
+    data: {labels, datasets: [{data, backgroundColor: colors, borderColor: "#fbfcfa", borderWidth: 4}]},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      cutout: "68%",
+      plugins: {legend: {position: "right", labels: {boxWidth: 10, boxHeight: 10, usePointStyle: true}}}
+    },
+  });
+}
+
+function bar(id, dist) {
+  const labels = Object.keys(dist);
+  const data = Object.values(dist);
+  new Chart(document.getElementById(id), {
+    type: "bar",
+    data: {labels, datasets: [{data, backgroundColor: "#0f6d68", borderRadius: 10}]},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      plugins: {legend: {display: false}},
+      scales: {
+        x: {grid: {display: false}},
+        y: {beginAtZero: true, grid: {color: "rgba(23,35,31,0.08)"}}
+      }
+    },
+  });
+}
+
+load();
+</script>
+</body>
+</html>

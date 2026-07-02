@@ -1,0 +1,37 @@
+# Healthcare Feedback Sentiment Analysis - root requirements
+# Combine all stage dependencies.
+
+# Data collection
+seleniumbase>=4.49
+google-play-scraper>=1.2
+
+# Preprocessing
+nltk>=3.9
+Sastrawi>=1.0.1
+jieba>=0.42
+emoji>=2.14
+langdetect>=1.0.9
+
+# Features + ML
+pandas>=2.2
+numpy>=1.26
+scipy>=1.13
+scikit-learn>=1.4
+
+# Transformer (model)
+torch>=2.0
+transformers>=4.40
+accelerate>=0.30
+datasets>=2.19
+
+# Web app
+fastapi>=0.110
+uvicorn[standard]>=0.29
+python-multipart>=0.0.9
+
+# RAG chatbot (optional - gracefully falls back to pattern-based Q&A if missing)
+# Groq is the primary LLM provider (fast + generous free tier); Gemini is
+# the secondary backup; python-dotenv reads the API keys from `.env`.
+groq>=0.11.0
+google-generativeai>=0.8.0
+python-dotenv>=1.0.0

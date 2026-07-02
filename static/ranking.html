@@ -1,0 +1,182 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Hospital reputation leaderboard ranked by sentiment and service aspect.">
+  <title>Ranking | Healthcare Feedback Intelligence</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260702-timeline-fix">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to ranking</a>
+
+<header>
+  <div class="brand">Healthcare Feedback SA <small>Research intelligence platform</small></div>
+  <nav aria-label="Primary navigation">
+    <a href="/">Analyse</a>
+    <a href="/batch">Batch</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/ranking" class="active">Ranking</a>
+    <a href="/chat">Chat</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="hero-copy reveal">
+      <p class="page-kicker">Reputation index</p>
+      <h1>Compare hospitals through review-derived service signals.</h1>
+      <p class="lede">Rank providers by overall positive rate or by specific aspects such as doctors, waiting time, facilities, treatment, cost, and cleanliness.</p>
+    </div>
+    <aside class="bezel dark reveal delay-1">
+      <div class="panel dark-panel">
+        <h2>Interpretation note</h2>
+        <p class="hint">Sample size matters. Scores with larger review counts are more reliable in presentation and discussion.</p>
+        <div class="hero-stats">
+          <span class="stat-chip"><strong>14</strong> hospitals</span>
+          <span class="stat-chip"><strong>n</strong> shown per score</span>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="bezel reveal delay-2">
+    <div class="panel">
+      <h2>Leaderboard</h2>
+      <div class="rank-controls">
+        <div class="field">
+          <label for="sortBy">Sort by</label>
+          <select id="sortBy">
+            <option value="overall">Overall positive rate</option>
+            <option value="doctor">Doctors</option>
+            <option value="nurse_staff">Nurses / staff</option>
+            <option value="waiting_time">Waiting time</option>
+            <option value="facilities">Facilities</option>
+            <option value="cost">Cost / affordability</option>
+            <option value="treatment">Treatment</option>
+            <option value="cleanliness">Cleanliness</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="filterLoc">Location</label>
+          <select id="filterLoc">
+            <option value="">All</option>
+            <option value="KL">KL / Klang Valley</option>
+            <option value="Melaka">Melaka</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="order">Order</label>
+          <select id="order">
+            <option value="desc">Best first</option>
+            <option value="asc">Worst first</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="table-wrap">
+        <table class="leaderboard">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Hospital</th>
+              <th>Reviews</th>
+              <th class="score-cell">Score</th>
+              <th>Aspect breakdown</th>
+            </tr>
+          </thead>
+          <tbody id="rows"></tbody>
+        </table>
+      </div>
+
+      <p class="hint" id="footnote"></p>
+    </div>
+  </section>
+</main>
+
+<footer>TNL6323 Natural Language Processing Project | Healthcare Feedback Sentiment Analysis</footer>
+
+<script>
+const sortSel = document.getElementById("sortBy");
+const locSel = document.getElementById("filterLoc");
+const orderSel = document.getElementById("order");
+
+async function load() {
+  const params = new URLSearchParams({
+    sort_by: sortSel.value,
+    location: locSel.value,
+    order: orderSel.value,
+  });
+  const r = await fetch("/api/ranking?" + params.toString());
+  if (!r.ok) {
+    document.getElementById("rows").innerHTML = '<tr><td colspan="5">Failed to load ranking.</td></tr>';
+    return;
+  }
+  const d = await r.json();
+  render(d);
+}
+
+function render(d) {
+  const tbody = document.getElementById("rows");
+  tbody.innerHTML = "";
+  const sortBy = sortSel.value;
+  for (const row of d.rows) {
+    const scoreVal = getScore(row, sortBy);
+    const scoreText = (scoreVal * 100).toFixed(1) + "% positive";
+    const nText = " (n=" + getMentions(row, sortBy) + ")";
+
+    const aspectChips = row.aspects
+      .filter(a => a.mentions >= 5)
+      .sort((a, b) => b.positive_rate - a.positive_rate)
+      .slice(0, 4)
+      .map(a => `<span class="chip" title="${a.mentions} mentions">${escapeHtml(a.aspect.replace("_", " "))}: ${(a.positive_rate * 100).toFixed(0)}%</span>`)
+      .join(" ");
+
+    tbody.innerHTML += `
+      <tr>
+        <td class="rank-num">#${row.rank}</td>
+        <td>
+          <div class="hospital-name">${escapeHtml(row.hospital)}</div>
+          <span class="loc-tag loc-${escapeHtml(row.location)}">${escapeHtml(row.location)}</span>
+        </td>
+        <td class="n-text">${row.total_reviews}</td>
+        <td class="score-cell">
+          <div class="score-text">${scoreText}${nText}</div>
+          <div class="score-bar"><div class="score-bar-fill" style="width:${(scoreVal * 100).toFixed(1)}%"></div></div>
+        </td>
+        <td>${aspectChips || '<span class="n-text">No aspect data</span>'}</td>
+      </tr>
+    `;
+  }
+  document.getElementById("footnote").textContent =
+    `${d.total_hospitals} hospitals ranked by ` +
+    (sortBy === "overall" ? "overall positive rate" : sortBy.replace("_", " ") + " positive rate") +
+    `. Sample sizes shown as (n=X); higher n means a more reliable score.`;
+}
+
+function getScore(row, sortBy) {
+  if (sortBy === "overall") return row.positive_rate;
+  const a = row.aspects.find(x => x.aspect === sortBy);
+  return a ? a.positive_rate : 0;
+}
+
+function getMentions(row, sortBy) {
+  if (sortBy === "overall") return row.total_reviews;
+  const a = row.aspects.find(x => x.aspect === sortBy);
+  return a ? a.mentions : 0;
+}
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[c]);
+}
+
+sortSel.addEventListener("change", load);
+locSel.addEventListener("change", load);
+orderSel.addEventListener("change", load);
+load();
+</script>
+</body>
+</html>

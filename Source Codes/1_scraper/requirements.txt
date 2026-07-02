@@ -1,0 +1,6 @@
+# Data Collection dependencies
+seleniumbase>=4.49.1
+google-play-scraper==1.2.7
+langdetect==1.0.9
+pandas>=2.2.3
+emoji>=2.14.0

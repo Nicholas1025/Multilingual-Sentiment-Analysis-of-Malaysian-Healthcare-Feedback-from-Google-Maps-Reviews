@@ -1,0 +1,37 @@
+# ─── Python ──────────────────────────────────────────────────────────
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+
+# ─── Secrets ────────────────────────────────────────────────────────
+.env
+!.env.example
+
+# ─── Data files (too large for git, regenerable from scrapers) ──────
+Data/raw/*.csv
+Data/processed/*.csv
+Data/splits/*.csv
+
+# ─── Trained models (binary, large) ─────────────────────────────────
+models/*.pkl
+models/*.npz
+models/transformer/
+models/*.txt
+
+# ─── Generated artefacts ────────────────────────────────────────────
+*.png
+*.svg
+Report/*.docx
+Report/figures/
+
+# ─── Browser / scraping leftovers ───────────────────────────────────
+chrome_profile/
+downloaded_files/
+
+# ─── OS / editor ────────────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+*.swp

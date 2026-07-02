@@ -1,0 +1,7 @@
+# Stage 2 - Preprocessing dependencies
+pandas>=2.2.3
+nltk>=3.9
+Sastrawi>=1.0.1
+jieba>=0.42.1
+emoji>=2.14.0
+langdetect>=1.0.9

@@ -1,0 +1,178 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Grounded question answering over retrieved Malaysian hospital review evidence.">
+  <title>Chat | Healthcare Feedback Intelligence</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260702-timeline-fix">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to chat</a>
+
+<header>
+  <div class="brand">Healthcare Feedback SA <small>Research intelligence platform</small></div>
+  <nav aria-label="Primary navigation">
+    <a href="/">Analyse</a>
+    <a href="/batch">Batch</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/ranking">Ranking</a>
+    <a href="/chat" class="active">Chat</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="hero-copy reveal">
+      <p class="page-kicker">Evidence Q&A</p>
+      <h1>Ask the corpus questions and inspect the retrieved review trail.</h1>
+      <p class="lede">The chat interface is designed for research demos: ask comparison, location, aspect, or complaint questions, then open the cited reviews behind each answer.</p>
+    </div>
+    <aside class="bezel dark reveal delay-1">
+      <div class="panel dark-panel">
+        <h2>Retrieval stack</h2>
+        <div class="glass-lines">
+          <div class="signal-row"><span>query</span><div class="signal-track"><div class="signal-fill" style="width:78%"></div></div><span>intent</span></div>
+          <div class="signal-row"><span>reviews</span><div class="signal-track"><div class="signal-fill copper" style="width:88%"></div></div><span>tf-idf</span></div>
+          <div class="signal-row"><span>answer</span><div class="signal-track"><div class="signal-fill plum" style="width:68%"></div></div><span>rag</span></div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="bezel reveal delay-2">
+    <div class="panel">
+      <h2>Question workspace</h2>
+      <p class="hint">Use a prompt chip for a fast demo path, or type a custom question about hospitals, service aspects, and review evidence.</p>
+
+      <div class="suggestions">
+        <button class="suggestion-chip" data-q="Which KL hospital has the best doctors?">Best doctors in KL</button>
+        <button class="suggestion-chip" data-q="Which Melaka hospital has the worst waiting time?">Worst waiting time in Melaka</button>
+        <button class="suggestion-chip" data-q="Compare Sunway Medical and Gleneagles">Compare Sunway vs Gleneagles</button>
+        <button class="suggestion-chip" data-q="What do people say about cleanliness at Hospital Melaka?">Cleanliness at Hospital Melaka</button>
+        <button class="suggestion-chip" data-q="Show me negative reviews about waiting time">Waiting-time complaints</button>
+      </div>
+
+      <div id="chatLog" class="chat-log" aria-live="polite"></div>
+
+      <div class="composer">
+        <textarea id="q" placeholder="Ask about hospitals, locations, aspects, or review evidence..." onkeydown="if(event.key==='Enter'&&!event.shiftKey){event.preventDefault();send();}"></textarea>
+        <button class="primary" id="sendBtn" onclick="send()">Send</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>TNL6323 Natural Language Processing Project | Healthcare Feedback Sentiment Analysis</footer>
+
+<script>
+const log = document.getElementById("chatLog");
+const qInput = document.getElementById("q");
+const sendBtn = document.getElementById("sendBtn");
+
+document.querySelectorAll(".suggestion-chip").forEach(el => {
+  el.addEventListener("click", () => {
+    qInput.value = el.dataset.q;
+    send();
+  });
+});
+
+function escapeHtml(s) {
+  return String(s).replace(/[&<>"']/g, c => ({
+    "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;"
+  })[c]);
+}
+
+function addMessage(role, html) {
+  const div = document.createElement("div");
+  div.className = "msg " + role;
+  div.innerHTML = html;
+  log.appendChild(div);
+  log.scrollTop = log.scrollHeight;
+  return div;
+}
+
+function addTyping() {
+  return addMessage("bot", '<div class="typing">Thinking</div>');
+}
+
+function renderBotMessage(data) {
+  // Any non-fallback backend (groq, gemini, ...) is a RAG response.
+  const isRag = data.model_used && !data.model_used.startsWith("pattern-based");
+  const tag = isRag
+    ? `<span class="model-tag rag">${escapeHtml(data.model_used)}</span>`
+    : `<span class="model-tag fallback">${escapeHtml(data.model_used)}</span>`;
+
+  const answerHtml = marked.parse(data.answer || "");
+
+  let sourcesHtml = "";
+  if (data.cited_reviews && data.cited_reviews.length > 0) {
+    const items = data.cited_reviews.map((r, i) => `
+      <div class="source-item">
+        <div class="src-head">
+          <span><strong>[${i + 1}]</strong> ${escapeHtml(r.hospital)} | ${escapeHtml(r.date)}${r.stars ? " | " + "star ".repeat(r.stars).trim() : ""}</span>
+          <span class="sim">similarity ${r.similarity.toFixed(2)}</span>
+        </div>
+        <div>"${escapeHtml(r.text.slice(0, 300))}${r.text.length > 300 ? "..." : ""}"</div>
+      </div>
+    `).join("");
+    sourcesHtml = `
+      <details class="sources" open>
+        <summary>Sources (${data.cited_reviews.length} of ${data.sources_count || data.cited_reviews.length} retrieved)</summary>
+        ${items}
+      </details>`;
+  }
+
+  const fbNote = data.fallback_reason
+    ? `<div class="meta-line"><em>Fallback reason: ${escapeHtml(data.fallback_reason)}</em></div>` : "";
+
+  return `
+    <div class="bubble">${answerHtml}</div>
+    ${sourcesHtml}
+    <div class="meta-line">
+      ${tag}
+      ${data.intent ? `<span>intent: ${escapeHtml(data.intent)}</span>` : ""}
+    </div>
+    ${fbNote}
+  `;
+}
+
+async function send() {
+  const q = qInput.value.trim();
+  if (!q) return;
+  qInput.value = "";
+  sendBtn.disabled = true;
+
+  addMessage("user", `<div class="bubble">${escapeHtml(q)}</div>`);
+  const typingEl = addTyping();
+
+  try {
+    const r = await fetch("/api/chat", {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify({question: q}),
+    });
+    const d = await r.json();
+    typingEl.remove();
+    if (!r.ok) {
+      addMessage("bot", `<div class="bubble">Error: ${escapeHtml(d.detail || "Something went wrong.")}</div>`);
+    } else {
+      addMessage("bot", renderBotMessage(d));
+    }
+  } catch (e) {
+    typingEl.remove();
+    addMessage("bot", `<div class="bubble">Network error: ${escapeHtml(e.message)}</div>`);
+  } finally {
+    sendBtn.disabled = false;
+    qInput.focus();
+  }
+}
+
+addMessage("bot", `<div class="bubble">
+  I can answer questions about the 14 Malaysian hospitals in this dataset using retrieved review evidence. Ask about doctors, waiting time, cleanliness, location comparisons, or negative review examples.
+</div>`);
+</script>
+</body>
+</html>

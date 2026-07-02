@@ -1,0 +1,97 @@
+Input file        : healthcare_final.csv
+Total rows        : 567
+
+Language distribution:
+  english      478  (84.3%)
+  malay         57  (10.1%)
+  other         29  (5.1%)
+  mixed          3  (0.5%)
+
+Text length (characters):
+  original  mean=308  max=3822
+  cleaned   mean=213  max=2297
+
+Reviews containing emoji: 70
+
+Top 30 tokens overall (after cleaning):
+  hospital               285
+  service                237
+  staff                  216
+  patient                170
+  doctor                 147
+  nurse                  144
+  time                   136
+  good                   115
+  posemoji               111
+  dr                     99
+  experience             93
+  thank                  83
+  care                   81
+  friendly               79
+  waiting                78
+  like                   75
+  even                   68
+  hour                   68
+  process                62
+  neuemoji               61
+  room                   60
+  department             59
+  emergency              58
+  treatment              58
+  really                 57
+  one                    56
+  ward                   56
+  's                     55
+  dr.                    55
+  admission              55
+
+Top 15 tokens for [positive] (189 reviews):
+  service                113
+  staff                  82
+  good                   75
+  thank                  75
+  posemoji               68
+  dr                     63
+  friendly               59
+  nurse                  56
+  care                   55
+  helpful                49
+  hospital               41
+  patient                39
+  department             38
+  excellent              38
+  process                37
+
+Top 15 tokens for [neutral] (189 reviews):
+  hospital               87
+  staff                  52
+  patient                41
+  posemoji               40
+  service                33
+  sakit                  28
+  jam                    26
+  time                   25
+  nurse                  23
+  waiting                23
+  pm                     21
+  yg                     21
+  neuemoji               21
+  doctor                 20
+  dr                     19
+
+Top 15 tokens for [negative] (189 reviews):
+  hospital               157
+  service                91
+  doctor                 91
+  patient                90
+  staff                  82
+  time                   78
+  nurse                  65
+  even                   50
+  experience             50
+  hour                   49
+  waiting                45
+  room                   42
+  's                     40
+  like                   38
+  bad                    36

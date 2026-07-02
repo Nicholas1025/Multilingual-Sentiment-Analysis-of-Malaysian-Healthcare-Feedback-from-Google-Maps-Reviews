@@ -1,0 +1,10 @@
+# Stage 4 - Model Training dependencies
+scikit-learn>=1.4
+numpy>=1.26
+scipy>=1.13
+pandas>=2.2.3
+# Transformer (XLM-RoBERTa)
+torch>=2.0
+transformers>=4.40
+accelerate>=0.30
+datasets>=2.19

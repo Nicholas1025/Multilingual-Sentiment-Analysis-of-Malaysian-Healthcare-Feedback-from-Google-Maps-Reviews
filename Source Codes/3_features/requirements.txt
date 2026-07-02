@@ -1,0 +1,5 @@
+# Stage 3 - Knowledge Representation dependencies
+pandas>=2.2.3
+scikit-learn>=1.4
+scipy>=1.13
+numpy>=1.26

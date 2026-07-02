@@ -1,0 +1,119 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="description" content="Batch CSV sentiment prediction for healthcare review datasets.">
+  <title>Batch | Healthcare Feedback Intelligence</title>
+  <link rel="stylesheet" href="/static/style.css?v=20260702-timeline-fix">
+</head>
+<body>
+<a class="skip-link" href="#main">Skip to batch tool</a>
+
+<header>
+  <div class="brand">Healthcare Feedback SA <small>Research intelligence platform</small></div>
+  <nav aria-label="Primary navigation">
+    <a href="/">Analyse</a>
+    <a href="/batch" class="active">Batch</a>
+    <a href="/dashboard">Dashboard</a>
+    <a href="/ranking">Ranking</a>
+    <a href="/chat">Chat</a>
+    <a href="/about">About</a>
+  </nav>
+</header>
+
+<main id="main">
+  <section class="hero">
+    <div class="hero-copy reveal">
+      <p class="page-kicker">Dataset processing lane</p>
+      <h1>Process a review corpus without leaving the research dashboard.</h1>
+      <p class="lede">Upload a CSV, preserve its original columns, and receive a prediction file with model labels, confidence, language, and aspect summaries.</p>
+      <div class="hero-stats">
+        <span class="stat-chip"><strong>1000</strong> row safety cap</span>
+        <span class="stat-chip"><strong>CSV</strong> input and output</span>
+        <span class="stat-chip"><strong>text</strong> required column</span>
+      </div>
+    </div>
+    <aside class="bezel dark reveal delay-1">
+      <div class="panel dark-panel">
+        <h2>Batch contract</h2>
+        <p class="hint">The upload endpoint remains <code>/api/predict-batch</code>; only the interface has been redesigned.</p>
+        <div class="glass-lines">
+          <div class="signal-row"><span>read csv</span><div class="signal-track"><div class="signal-fill" style="width:84%"></div></div><span>utf-8</span></div>
+          <div class="signal-row"><span>predict</span><div class="signal-track"><div class="signal-fill copper" style="width:70%"></div></div><span>model</span></div>
+          <div class="signal-row"><span>export</span><div class="signal-track"><div class="signal-fill plum" style="width:92%"></div></div><span>csv</span></div>
+        </div>
+      </div>
+    </aside>
+  </section>
+
+  <section class="grid-asym">
+    <div class="bezel reveal delay-2">
+      <div class="panel">
+        <h2>Upload file</h2>
+        <p class="hint">Use a CSV file containing a <code>text</code> column. Multilingual review text is supported.</p>
+        <input id="csvFile" type="file" accept=".csv">
+        <div class="action-row">
+          <button class="primary" id="uploadBtn">Run batch prediction</button>
+          <span id="status" class="status-text" aria-live="polite"></span>
+        </div>
+      </div>
+    </div>
+
+    <div class="bezel reveal delay-3">
+      <div class="panel">
+        <h2>Required format</h2>
+        <pre>text
+"The doctor was friendly."
+"Waiting time too long."
+"Hospital sangat bersih."</pre>
+        <p class="hint">Output adds <code>predicted_label</code>, <code>confidence</code>, <code>language</code>, and <code>aspects</code>.</p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer>TNL6323 Natural Language Processing Project | Healthcare Feedback Sentiment Analysis</footer>
+
+<script>
+const btn = document.getElementById("uploadBtn");
+const fileInput = document.getElementById("csvFile");
+const status = document.getElementById("status");
+
+btn.addEventListener("click", async () => {
+  const file = fileInput.files[0];
+  if (!file) {
+    status.textContent = "Pick a CSV file first.";
+    return;
+  }
+
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span>Processing';
+  status.textContent = "";
+
+  try {
+    const form = new FormData();
+    form.append("file", file);
+    const r = await fetch("/api/predict-batch", {method: "POST", body: form});
+    if (!r.ok) {
+      const err = await r.json().catch(() => ({}));
+      throw new Error(err.detail || ("HTTP " + r.status));
+    }
+    const blob = await r.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "predictions.csv";
+    a.click();
+    URL.revokeObjectURL(url);
+    status.textContent = "Downloaded predictions.csv";
+  } catch (e) {
+    status.textContent = "Error: " + e.message;
+  } finally {
+    btn.disabled = false;
+    btn.textContent = "Run batch prediction";
+  }
+});
+</script>
+</body>
+</html>
