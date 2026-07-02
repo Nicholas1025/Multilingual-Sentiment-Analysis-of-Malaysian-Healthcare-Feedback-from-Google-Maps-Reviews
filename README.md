@@ -135,12 +135,6 @@ Dr ok la, but waiting damn long lah.
 
 ---
 
-### 📊 Dashboard — dataset at a glance
-
-<p align="center">
-  <img src="assets/dashboard.png" alt="Dashboard page" width="80%">
-</p>
-
 ---
 
 ### 🏆 Ranking — hospital reputation leaderboard
